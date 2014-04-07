@@ -4,7 +4,7 @@
 
 ### Beschreibung
 
-Webapplikation zur Simulation der Enigma
+Webapplikation zur Simulation der Enigma 
 Die Applikation soll vollständig in HTML, CSS und JavaScript realisiert werden
 
 #### GitHub repo
@@ -13,7 +13,7 @@ https://github.com/avanthay/zhaw_enigma
 
 #### App
 
-
+in construction :construction:
 
 
 ##### Authoren
