@@ -22,6 +22,7 @@ function CHARTONUMBER(char) {
  */
 function Wheel(name, position, encryption, notch) {
     this.name = name;
+    this.startPosition = position;
     this.position = position;
     this.encryption = ('0' + encryption).split('');
     this.notch = notch;
@@ -32,6 +33,14 @@ function Wheel(name, position, encryption, notch) {
             actualPosition = 0;
         }
         this.position = NUMBERTOCHAR(actualPosition + 1);
+    };
+
+    this.decrementPosition = function() {
+        var actualPosition = CHARTONUMBER(this.position);
+        if (actualPosition === 1) {
+            actualPosition = 27;
+        }
+        this.position = NUMBERTOCHAR(actualPosition - 1);
     };
 
     this.isNotchActive = function() {
@@ -68,6 +77,31 @@ function Wheel(name, position, encryption, notch) {
 
     this.getBackwardEncryptedAbsolutePosition = function(absolutePosition) {
         return this.getAbsolutePosition(this.encryption.indexOf(NUMBERTOCHAR(this.getRelativePosition(absolutePosition))));
+    };
+
+    this.reset = function() {
+        this.position = this.startPosition;
+    };
+
+    this.incrementStartPosition = function() {
+        var actualPosition = CHARTONUMBER(this.startPosition);
+        if (actualPosition === 26) {
+            actualPosition = 0;
+        }
+        this.changeStartPosition(NUMBERTOCHAR(actualPosition + 1));
+    };
+
+    this.decrementStartPosition = function() {
+        var actualPosition = CHARTONUMBER(this.startPosition);
+        if (actualPosition === 1) {
+            actualPosition = 27;
+        }
+        this.changeStartPosition(NUMBERTOCHAR(actualPosition - 1));
+    };
+
+    this.changeStartPosition = function(startPosition) {
+        this.startPosition = startPosition;
+        this.position = startPosition;
     };
 }
 
@@ -129,14 +163,15 @@ function Plugboard(encryption) {
     };
 }
 
-function Machine() {
-    this.reflector = new Reflector('B', 'AY BR CU DH EQ FS GL IP JX KN MO TZ VW');
-    this.wheelLeft = new Wheel('1', 'A', 'EKMFLGDQVZNTOWYHXUSPAIBRCJ', 'Q');
-    this.wheelCenter = new Wheel('2', 'A', 'AJDKSIRUXBLHWTMCQGZNPYFVOE', 'E');
-    this.wheelRight = new Wheel('3', 'A', 'BDFHJLCPRTXVZNYEIWGAKMUSQO', 'V');
-    this.plugboard = new Plugboard('');
+function Machine(reflector, wheelLeft, wheelCenter, wheelRight, plugboard) {
+    this.reflector = reflector;
+    this.wheelLeft = wheelLeft;
+    this.wheelCenter = wheelCenter;
+    this.wheelRight = wheelRight;
+    this.plugboard = plugboard;
 
     this.encryptChar = function(char) {
+//TODO prüfen ob character zulässig ist
         this.rotateWheel();
         var pos = this.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char));
         pos = this.wheelLeft.getForwardEncryptedAbsolutePosition(this.wheelCenter.getForwardEncryptedAbsolutePosition(
@@ -147,6 +182,15 @@ function Machine() {
         return this.plugboard.getEncryptedChar(pos);
     };
 
+    this.encryptMessage = function(message) {
+        message = message.replace(/\s+/g, '');
+        var output = '';
+        for (var i = 0; i < message.length; i++) {
+            output += this.encryptChar(message[i]);
+        }
+        return output;
+    };
+
     this.rotateWheel = function() {
         if (this.wheelCenter.isNotchActive()) {
             this.wheelLeft.incrementPosition();
@@ -155,6 +199,23 @@ function Machine() {
             this.wheelCenter.incrementPosition();
         }
         this.wheelRight.incrementPosition();
+    };
+
+    this.undoRotateWheel = function() {
+        this.wheelRight.decrementPosition();
+        if (this.wheelRight.isNotchActive()) {
+            this.wheelCenter.decrementPosition();
+            if (this.wheelCenter.isNotchActive()) {
+                this.wheelLeft.decrementPosition();
+                this.wheelCenter.decrementPosition();
+            }
+        }
+    };
+
+    this.resetWheels = function() {
+        this.wheelLeft.reset();
+        this.wheelCenter.reset();
+        this.wheelRight.reset();
     };
 }
 

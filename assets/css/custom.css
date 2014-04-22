@@ -1,0 +1,135 @@
+.navbar-brand {
+    padding-top: 5px;
+}
+
+.navbar-static-top {
+    margin-bottom: 19px;
+}
+
+body {
+    background-color: #DEB887;
+    background-image: url(../img/background_wood.jpg);
+}
+
+.navbar-default {
+    background-color: #8B5A2B;
+    background-image: url(../img/background_wood.jpg);
+    color: #DEB887;
+    border: none;
+}
+
+.navbar-default .navbar-nav li a {
+    color: #DEB887;
+}
+
+#errorMessage {
+    height: 70px;
+}
+
+#inputTextField, #outputTextField {
+    word-break: break-word;
+}
+
+.glyphicon-remove-circle {
+    float: right;
+    margin-top: -27px;
+}
+
+#input .row,
+#output .row {
+    width: 100%;
+    margin: 3px 0px;
+}
+
+#input #inputSecondRow, 
+#output #outputSecondRow {
+    margin-left: 5% ;
+}
+
+.button {
+    color: white;
+    outline: none;
+    background-color: black;
+    float: left;
+    width: 8%;
+    margin: 0px 1.55555%;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    border-radius: 50%; 
+}
+
+#buttonFields {
+    clear: both;
+}
+
+.wheel {
+    min-height: 100px;
+    border-style: solid;
+    border-color: grey;
+    border-width: 2px;
+    margin-bottom: 20px;
+}
+
+.wheel ul {
+    list-style-type: none;
+}
+
+.manageWheel {
+    width: 250px;
+    margin: auto;
+}
+
+.manageWheel p {
+    float: left;
+    position: relative;
+    top: 10px;
+    left: 5px;
+    font-size: large;
+    color: white;
+}
+.manageWheel .selectWheel p {
+    width: 72px;
+}
+
+.manageWheel ul {
+    position: relative;
+    top: 5px;
+    left: 10px;
+    margin: 0px;
+}
+
+#reflectorSet ul {
+    left: 30px;
+}
+
+.selectPosition {
+    margin-top: 10px;
+}
+
+.selectPosition ul {
+    float: left;
+    left: 10px;
+}
+
+.selectPosition .startLabel {
+    left: 17px;
+}
+
+.selectPosition .startPagination {
+    left: 25px;
+    float: none;
+}
+
+.manageWheel .pagination>.disabled>a {
+    background-color: #eee;
+    color: #bbb;
+}
+
+.selectPosition p {
+    font-size: inherit;
+}
+
+.currentPosition a, .startPosition a {
+    text-align: center;
+    width: 40px;
+}
