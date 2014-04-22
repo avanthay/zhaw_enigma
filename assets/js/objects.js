@@ -171,15 +171,29 @@ function Machine(reflector, wheelLeft, wheelCenter, wheelRight, plugboard) {
     this.plugboard = plugboard;
 
     this.encryptChar = function(char) {
-//TODO prüfen ob character zulässig ist
+        if (CHARTONUMBER(char) === -1 || char === '0') {
+            return;
+        }
         this.rotateWheel();
-        var pos = this.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char));
-        pos = this.wheelLeft.getForwardEncryptedAbsolutePosition(this.wheelCenter.getForwardEncryptedAbsolutePosition(
-                this.wheelRight.getForwardEncryptedAbsolutePosition(pos)));
-        pos = this.reflector.getEncryptedAbsolutePosition(pos);
-        pos = this.wheelRight.getBackwardEncryptedAbsolutePosition(this.wheelCenter.getBackwardEncryptedAbsolutePosition(
-                this.wheelLeft.getBackwardEncryptedAbsolutePosition(pos)));
-        return this.plugboard.getEncryptedChar(pos);
+        return NUMBERTOCHAR(this.getEncryptedPositions(char)['backward']['plugboard']);
+    };
+
+    this.getEncryptedPositions = function(char) {
+        var forward = new Array();
+        forward['plugboard'] = this.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char));
+        forward['wheelRight'] = this.wheelRight.getForwardEncryptedAbsolutePosition(forward['plugboard']);
+        forward['wheelCenter'] = this.wheelCenter.getForwardEncryptedAbsolutePosition(forward['wheelRight']);
+        forward['wheelLeft'] = this.wheelLeft.getForwardEncryptedAbsolutePosition(forward['wheelCenter']);
+        forward['reflector'] = this.reflector.getEncryptedAbsolutePosition(forward['wheelLeft']);
+        var backward = new Array();
+        backward['wheelLeft'] = this.wheelLeft.getBackwardEncryptedAbsolutePosition(forward['reflector']);
+        backward['wheelCenter'] = this.wheelCenter.getBackwardEncryptedAbsolutePosition(backward['wheelLeft']);
+        backward['wheelRight'] = this.wheelRight.getBackwardEncryptedAbsolutePosition(backward['wheelCenter']);
+        backward['plugboard'] = this.plugboard.getEncryptedAbsolutePosition(backward['wheelRight']);
+        var positions = new Array();
+        positions['forward'] = forward;
+        positions['backward'] = backward;
+        return positions;
     };
 
     this.encryptMessage = function(message) {

@@ -13,6 +13,7 @@ window.onload = function(e) {
     createObjects();
     setSelectedWheels();
     createButtons();
+    canvasInit();
 };
 
 /*
@@ -82,12 +83,14 @@ function resizeButtons() {
     var width = $('[class="button"]').outerWidth();
     $('[class="button"]').css('height', width);
     $('[class="button keyboardButton"]').css('height', width);
-    if (width <= 25) {
-        $('[class="button"]').css({'font-size': 'small', 'margin': ''});
-        $('[class="button keyboardButton"]').css({'font-size': 'small', 'margin': ''});
-    } else if (width <= 35) {
-        $('[class="button"]').css({'font-size': 'inherit', 'margin': ''});
-        $('[class="button keyboardButton"]').css({'font-size': 'inherit', 'margin': ''});
+    if (width <= 35) {
+        if (navigator.userAgent.toLowerCase().indexOf("iphone") !== -1) {
+            $('[class="button"]').css({'font-size': 'small', 'margin': '0px 0.7%'});
+            $('[class="button keyboardButton"]').css({'font-size': 'small', 'margin': '0px 0.7%'});
+        } else {
+            $('[class="button"]').css({'font-size': 'small', 'margin': ''});
+            $('[class="button keyboardButton"]').css({'font-size': 'small', 'margin': ''});
+        }
     } else {
         $('[class="button"]').css({'font-size': 'large', 'margin-left': ''});
         $('[class="button keyboardButton"]').css({'font-size': 'large', 'margin-left': ''});
@@ -146,8 +149,10 @@ function validCharPressed(char) {
     $('#inputTextField').html($('#inputTextField').html() + char);
     if (' ' === char) {
         $('#outputTextField').html($('#outputTextField').html() + char);
+        canvasReset();
     } else {
         var encryptedChar = MACHINE.encryptChar(char);
+        canvasShowEncryption(char);
         glowLampButton(encryptedChar);
         $('#outputTextField').html($('#outputTextField').html() + encryptedChar);
         setWheelCurrentPositions();
@@ -162,9 +167,12 @@ function backslashPressed() {
     if (text.replace(/\s+/g, '') !== $('#inputTextField').html().replace(/\s+/g, '')) {
         MACHINE.undoRotateWheel();
         setWheelCurrentPositions();
+    }
+    var char = text.substring(text.length - 2, text.length - 1);
+    if (char.length > 0 && char !== ' ') {
+        canvasShowEncryption(char);
     } else {
-        showError('Unfortunatly an error is occured, please start again!');
-        resetMachine();
+        canvasReset();
     }
 }
 
@@ -172,7 +180,7 @@ function glowLampButton(char) {
     $('#lampButton' + char).css({'color': 'yellow', 'background-color': '#3B3B3B'});
     setTimeout(function() {
         $('#lampButton' + char).css({'color': '', 'background-color': ''});
-    }, 300);
+    }, 400);
 }
 
 
@@ -227,6 +235,7 @@ function resetMachine() {
     $('#inputTextField').html('');
     $('#outputTextField').html('');
     setWheelCurrentPositions();
+    canvasReset();
 }
 
 
@@ -263,4 +272,138 @@ function setWheelCurrentPositions() {
     wheels.forEach(function(wheel) {
         $('#' + wheel + 'Set .currentPosition a').html(MACHINE[wheel].position);
     });
+}
+
+/*
+ * CANVAS
+ */
+
+
+/*
+ * plugboard canvas
+ */
+
+var plugStage = new Kinetic.Stage({
+    container: 'plugboardCanvas',
+    width: 780,
+    height: 200
+});
+
+
+function plugInit() {
+    plugAddChars();
+}
+
+function plugAddChars() {
+    var layer = new Kinetic.Layer();
+    for (var i = 0; i < 26; i++) {
+        layer.add(new canvasCreateChar(String.fromCharCode(i + 65), 5 + i * 30, 132, false));
+        layer.add(new canvasCreateChar(String.fromCharCode(i + 65), 5 + i * 30, 50, true));
+        if ((MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) !== i) {
+            layer.add(new canvasCreateLine((12 + i * 30), 130, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white'));
+        }
+    }
+    plugStage.add(layer);
+}
+
+function plugReset() {
+    plugStage.clear();
+    plugInit();
+}
+
+function plugShowEncryption(char) {
+    var layer = new Kinetic.Layer();
+    //input
+    layer.add(new canvasCreateUpArrow(12 + (CHARTONUMBER(char) - 1) * 30, 195, 40, '#428bca'));
+    layer.add(new canvasCreateLine((12 + (CHARTONUMBER(char) - 1) * 30), 130,
+            12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 70, '#428bca'));
+    layer.add(new canvasCreateUpArrow(12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 45, 40, '#428bca'));
+    //output
+    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 5, 40, '#ebccd1'));
+    layer.add(new canvasCreateLine(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 70,
+            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 130, '#ebccd1'));
+    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 155, 40, '#ebccd1'));
+
+    plugStage.add(layer);
+}
+
+
+/*
+ * functions for all canvases
+ */
+
+function canvasInit() {
+    plugInit();
+}
+
+function canvasShowEncryption(char) {
+    canvasReset();
+    plugShowEncryption(char);
+}
+
+function canvasReset() {
+    plugReset();
+}
+
+/*
+ * canvas helper functions
+ */
+
+function canvasCreateChar(char, xPosition, yPosition, draggable) {
+    var charObject = new Kinetic.Text({
+        x: xPosition,
+        y: yPosition,
+        text: char,
+        fontSize: 18,
+        fontFamily: 'Helvetica',
+        fontStyle: 'bold',
+        fill: 'white',
+        draggable: draggable
+    });
+    if (draggable) {
+        charObject.on('mouseover', function() {
+            document.body.style.cursor = 'pointer';
+        });
+        charObject.on('mouseout', function() {
+            document.body.style.cursor = 'default';
+        });
+        charObject.on("dragend", function() {
+            var xPos = this.getX() + 10;
+            MACHINE.plugboard.setEncryptedChar(char, NUMBERTOCHAR(parseInt(xPos / 30) + 1));
+            resetMachine();
+        });
+    }
+    return charObject;
+}
+
+function canvasCreateLine(xStart, yStart, xEnd, yEnd, color) {
+    var line = new Kinetic.Line({
+        points: [xStart, yStart, xEnd, yEnd],
+        stroke: color
+    });
+    return line;
+}
+
+function canvasCreateUpArrow(xStart, yStart, length, color) {
+    var arrow = new Kinetic.Line({
+        points: [xStart - 4, yStart - length + 15, xStart - 4, yStart, xStart + 4, yStart, xStart + 4, yStart - length + 15, xStart + 10, yStart - length + 15,
+            xStart, yStart - length, xStart - 10, yStart - length + 15, xStart - 4, yStart - length + 15],
+        fill: color,
+        stroke: color,
+        strokeWidth: 1,
+        closed: true
+    });
+    return arrow;
+}
+
+function canvasCreateDownArrow(xStart, yStart, length, color) {
+    var arrow = new Kinetic.Line({
+        points: [xStart - 4, yStart + length - 15, xStart - 4, yStart, xStart + 4, yStart, xStart + 4, yStart + length - 15, xStart + 10, yStart + length - 15,
+            xStart, yStart + length, xStart - 10, yStart + length - 15, xStart - 4, yStart + length - 15],
+        fill: color,
+        stroke: color,
+        strokeWidth: 1,
+        closed: true
+    });
+    return arrow;
 }
