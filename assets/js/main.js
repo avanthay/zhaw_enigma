@@ -299,9 +299,7 @@ function plugAddChars() {
     for (var i = 0; i < 26; i++) {
         layer.add(new canvasCreateChar(String.fromCharCode(i + 65), 5 + i * 30, 132, false));
         layer.add(new canvasCreateChar(String.fromCharCode(i + 65), 5 + i * 30, 50, true));
-        if ((MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) !== i) {
-            layer.add(new canvasCreateLine((12 + i * 30), 130, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white'));
-        }
+        layer.add(new canvasCreateLine((12 + i * 30), 130, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white',0.5));
     }
     plugStage.add(layer);
 }
@@ -316,12 +314,12 @@ function plugShowEncryption(char) {
     //input
     layer.add(new canvasCreateUpArrow(12 + (CHARTONUMBER(char) - 1) * 30, 195, 40, '#428bca'));
     layer.add(new canvasCreateLine((12 + (CHARTONUMBER(char) - 1) * 30), 130,
-            12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 70, '#428bca'));
+            12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 70, '#428bca',1.5));
     layer.add(new canvasCreateUpArrow(12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 45, 40, '#428bca'));
     //output
     layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 5, 40, '#ebccd1'));
     layer.add(new canvasCreateLine(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 70,
-            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 130, '#ebccd1'));
+            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 130, '#ebccd1',1.5));
     layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 155, 40, '#ebccd1'));
 
     plugStage.add(layer);
@@ -376,10 +374,11 @@ function canvasCreateChar(char, xPosition, yPosition, draggable) {
     return charObject;
 }
 
-function canvasCreateLine(xStart, yStart, xEnd, yEnd, color) {
+function canvasCreateLine(xStart, yStart, xEnd, yEnd, color, width) {
     var line = new Kinetic.Line({
         points: [xStart, yStart, xEnd, yEnd],
-        stroke: color
+        stroke: color,
+        strokeWidth: width
     });
     return line;
 }
