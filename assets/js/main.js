@@ -105,7 +105,6 @@ $('.selectWheel a').on('click', function(e) {
     if (state.match(/disabled/) || state.match(/active/)) {
         return false;
     }
-    resetMachine();
     if (state.match(/reflector/)) {
         var number = state.substring(9, 10);
         MACHINE.reflector = REFLECTORS[number];
@@ -117,6 +116,7 @@ $('.selectWheel a').on('click', function(e) {
         MACHINE[wheel] = WHEELS[number];
     }
     setSelectedWheels();
+    resetMachine();
     return false;
 });
 
@@ -129,13 +129,12 @@ $('.selectPosition a').on('click', function(e) {
     var wheel = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.id;
     wheel = wheel.substring(0, wheel.length - 3);
     if (action === 'PreviousPosition') {
-        resetMachine();
         MACHINE[wheel].decrementStartPosition();
     } else if (action === 'NextPosition') {
-        resetMachine();
         MACHINE[wheel].incrementStartPosition();
     }
     setWheelStartPositions();
+    resetMachine();
     return false;
 });
 
@@ -177,7 +176,7 @@ function backslashPressed() {
 }
 
 function glowLampButton(char) {
-    $('#lampButton' + char).css({'color': 'yellow', 'background-color': '#3B3B3B'});
+    $('#lampButton' + char).css({'color': 'yellow', 'background-color': 'black'});
     setTimeout(function() {
         $('#lampButton' + char).css({'color': '', 'background-color': ''});
     }, 400);
@@ -205,9 +204,6 @@ function showError(message) {
             + '<strong>Error ! </strong> '
             + message + '</div>';
     $('#errorMessage').html(html);
-    setTimeout(function() {
-        $('.errorMessage' + time).remove();
-    }, 3000);
 }
 
 function createButtons() {
@@ -278,76 +274,54 @@ function setWheelCurrentPositions() {
  * CANVAS
  */
 
+var colorFW = '#428bca';
+var colorBW = '#32CD32';
 
 /*
  * plugboard canvas
  */
 
-var plugStage = new Kinetic.Stage({
-    container: 'plugboardCanvas',
-    width: 780,
-    height: 200
-});
-
-
 function plugInit() {
+    window['plugStage'] = new Kinetic.Stage({
+        container: 'plugboardCanvas',
+        width: 780,
+        height: 200
+    });
     plugAddChars();
 }
 
 function plugAddChars() {
     var layer = new Kinetic.Layer();
     for (var i = 0; i < 26; i++) {
-        layer.add(new canvasCreateChar(String.fromCharCode(i + 65), 5 + i * 30, 132, false));
-        layer.add(new canvasCreateChar(String.fromCharCode(i + 65), 5 + i * 30, 50, true));
-        layer.add(new canvasCreateLine((12 + i * 30), 130, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white',0.5));
+        layer.add(new plugCreateChar(NUMBERTOCHAR(i + 1), 5 + i * 30, 132, false));
+        layer.add(new plugCreateChar(NUMBERTOCHAR(i + 1), 5 + i * 30, 50, true));
+        layer.add(new canvasCreateLine((12 + i * 30), 130, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white', 0.5));
     }
     plugStage.add(layer);
 }
 
 function plugReset() {
-    plugStage.clear();
+    plugStage.destroy();
     plugInit();
 }
 
 function plugShowEncryption(char) {
     var layer = new Kinetic.Layer();
     //input
-    layer.add(new canvasCreateUpArrow(12 + (CHARTONUMBER(char) - 1) * 30, 195, 40, '#428bca'));
+    layer.add(new canvasCreateUpArrow(12 + (CHARTONUMBER(char) - 1) * 30, 195, 40, colorFW));
     layer.add(new canvasCreateLine((12 + (CHARTONUMBER(char) - 1) * 30), 130,
-            12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 70, '#428bca',1.5));
-    layer.add(new canvasCreateUpArrow(12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 45, 40, '#428bca'));
+            12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 70, colorFW, 1.5));
+    layer.add(new canvasCreateUpArrow(12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 45, 40, colorFW));
     //output
-    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 5, 40, '#ebccd1'));
+    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 5, 40, colorBW));
     layer.add(new canvasCreateLine(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 70,
-            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 130, '#ebccd1',1.5));
-    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 155, 40, '#ebccd1'));
+            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 130, colorBW, 1.5));
+    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 155, 40, colorBW));
 
     plugStage.add(layer);
 }
 
-
-/*
- * functions for all canvases
- */
-
-function canvasInit() {
-    plugInit();
-}
-
-function canvasShowEncryption(char) {
-    canvasReset();
-    plugShowEncryption(char);
-}
-
-function canvasReset() {
-    plugReset();
-}
-
-/*
- * canvas helper functions
- */
-
-function canvasCreateChar(char, xPosition, yPosition, draggable) {
+function plugCreateChar(char, xPosition, yPosition, draggable) {
     var charObject = new Kinetic.Text({
         x: xPosition,
         y: yPosition,
@@ -374,6 +348,200 @@ function canvasCreateChar(char, xPosition, yPosition, draggable) {
     return charObject;
 }
 
+/*
+ * wheelsCanvas
+ */
+
+var canvasWheels = new Array('wheelRight', 'wheelCenter', 'wheelLeft');
+var canvasAllWheels = new Array('plugboard', 'wheelRight', 'wheelCenter', 'wheelLeft', 'reflector');
+
+function wheelsInit() {
+    canvasWheels.forEach(function(wheel) {
+        window[wheel + 'Stage'] = new Kinetic.Stage({
+            container: wheel + 'Canvas',
+            width: 200,
+            height: 400
+        });
+        wheelInit(wheel);
+    });
+}
+
+function wheelsReset() {
+    canvasWheels.forEach(function(wheel) {
+        window[wheel + 'Stage'].destroy();
+    });
+    wheelsInit();
+}
+
+function wheelsShowEncryption(char) {
+    canvasWheels.forEach(function(wheel) {
+        wheelShowEncryption(wheel, char);
+    });
+}
+
+/*
+ * wheel helper functions
+ */
+
+function wheelInit(wheel) {
+    var layer = new Kinetic.Layer();
+    for (var i = 0; i < 26; i++) {
+        var char = NUMBERTOCHAR(MACHINE[wheel].getRelativePosition((i + 23) % 26));
+        var color = 'white';
+        if (char === MACHINE[wheel].notch) {
+            layer.add(new canvasCreateLine(55, 11 + i * 15, 65, 11 + i * 15, 'black', 3));
+            layer.add(new canvasCreateLine(135, 11 + i * 15, 145, 11 + i * 15, 'black', 3));
+            color = 'black';
+        }
+        layer.add(new wheelCreateChar(char, 70, 5 + i * 15, color));
+        layer.add(new wheelCreateChar(char, 120, 5 + i * 15, color));
+        layer.add(new canvasCreateLine(85, 11 + (MACHINE[wheel].getForwardEncryptedAbsolutePosition((i + 23) % 26) + 3) % 26 * 15,
+                115, 11 + i * 15, 'white', 0.5));
+    }
+    layer.add(new Kinetic.Rect({
+        x: 60,
+        y: 63,
+        width: 80,
+        height: 15,
+        stroke: 'black',
+        strokeWidth: 3
+    }));
+    window[wheel + 'Stage'].add(layer);
+}
+
+function wheelShowEncryption(wheel, char) {
+    var layer = new Kinetic.Layer();
+    //forward
+    var charNr = (MACHINE.getEncryptedPositions(char)['forward'][canvasAllWheels[canvasAllWheels.indexOf(wheel) - 1]] + 3) % 26;
+    layer.add(new canvasCreateLeftArrow(190, 11 + charNr * 15, 40, colorFW));
+    layer.add(new canvasCreateLine(85, 11 + (MACHINE[wheel].getForwardEncryptedAbsolutePosition((charNr + 23) % 26) + 3) % 26 * 15,
+            115, 11 + charNr * 15, colorFW, 1.5));
+    charNr = (MACHINE.getEncryptedPositions(char)['forward'][wheel] + 3) % 26;
+    layer.add(new canvasCreateLeftArrow(50, 11 + charNr * 15, 40, colorFW));
+
+    //backward
+    charNr = (MACHINE.getEncryptedPositions(char)['backward'][canvasAllWheels[canvasAllWheels.indexOf(wheel) + 1]] + 3) % 26;
+    layer.add(new canvasCreateRightArrow(10, 11 + charNr * 15, 40, colorBW));
+    charNr = (MACHINE.getEncryptedPositions(char)['backward'][wheel] + 3) % 26;
+    layer.add(new canvasCreateRightArrow(150, 11 + charNr * 15, 40, colorBW));
+    layer.add(new canvasCreateLine(85, 11 + (MACHINE[wheel].getForwardEncryptedAbsolutePosition((charNr + 23) % 26) + 3) % 26 * 15,
+            115, 11 + charNr * 15, colorBW, 1.5));
+
+    window[wheel + 'Stage'].add(layer);
+}
+
+
+function wheelCreateChar(char, xPosition, yPosition, color) {
+    var charObject = new Kinetic.Text({
+        x: xPosition,
+        y: yPosition,
+        text: char,
+        fontSize: 12,
+        fontFamily: 'Helvetica',
+        fontStyle: 'bold',
+        fill: color
+    });
+    return charObject;
+}
+
+/*
+ * reflector canvas
+ */
+
+function reflectorInit() {
+    window['reflectorStage'] = new Kinetic.Stage({
+        container: 'reflectorCanvas',
+        width: 160,
+        height: 400
+    });
+    reflectorAddChars();
+}
+
+function reflectorAddChars() {
+    var layer = new Kinetic.Layer();
+    var connectedChars = new Array();
+    for (var i = 0; i < 26; i++) {
+        var charNr = (i + 23) % 26;
+        if (charNr === 0) {
+            charNr = 26;
+        }
+        var char = NUMBERTOCHAR(charNr);
+        layer.add(new wheelCreateChar(char, 90, 5 + i * 15, 'white'));
+        if (connectedChars.indexOf(char) === -1) {
+            var encryptedChar = MACHINE.reflector.getEncryptedAbsolutePosition(charNr);
+            layer.add(new reflectorCreateLine(85, 11 + (encryptedChar + 3) % 26 * 15, 85, 11 + i * 15, 'white', 0.5));
+            connectedChars.push(NUMBERTOCHAR(encryptedChar));
+        }
+        connectedChars.push(char);
+    }
+    layer.add(new Kinetic.Rect({
+        x: 80,
+        y: 63,
+        width: 30,
+        height: 15,
+        stroke: 'black',
+        strokeWidth: 3
+    }));
+    reflectorStage.add(layer);
+}
+
+function reflectorShowEncryption(char) {
+    var layer = new Kinetic.Layer();
+    //forward
+    var charNr = (MACHINE.getEncryptedPositions(char)['forward']['wheelLeft'] + 3) % 26;
+    layer.add(new canvasCreateLeftArrow(160, 11 + charNr * 15, 40, colorFW));
+    console.log(charNr);
+    layer.add(new reflectorCreateLine(85, 11 + (MACHINE.getEncryptedPositions(char)['backward']['reflector'] + 3) % 26 * 15,
+            85, 11 + charNr * 15, colorBW, 1.5));
+    //backward
+    charNr = (MACHINE.getEncryptedPositions(char)['backward']['reflector'] + 3) % 26;
+    layer.add(new canvasCreateRightArrow(120, 11 + charNr * 15, 40, colorBW));
+    reflectorStage.add(layer);
+}
+
+function reflectorReset() {
+    reflectorStage.destroy();
+    reflectorInit();
+}
+
+function reflectorCreateLine(xStart, yStart, xEnd, yEnd, color, width) {
+    var helper = (yStart + yEnd) % 67 + 10;
+    var line = new Kinetic.Line({
+        points: [xStart, yStart, xStart - helper, yStart, xEnd - helper, yEnd, xEnd, yEnd],
+        stroke: color,
+        strokeWidth: width
+    });
+    return line;
+}
+
+/*
+ * functions for all canvases
+ */
+
+function canvasInit() {
+    plugInit();
+    wheelsInit();
+    reflectorInit();
+}
+
+function canvasShowEncryption(char) {
+    canvasReset();
+    plugShowEncryption(char);
+    wheelsShowEncryption(char);
+    reflectorShowEncryption(char);
+}
+
+function canvasReset() {
+    plugReset();
+    wheelsReset();
+    reflectorReset();
+}
+
+/*
+ * canvas helper functions
+ */
+
+
 function canvasCreateLine(xStart, yStart, xEnd, yEnd, color, width) {
     var line = new Kinetic.Line({
         points: [xStart, yStart, xEnd, yEnd],
@@ -399,6 +567,30 @@ function canvasCreateDownArrow(xStart, yStart, length, color) {
     var arrow = new Kinetic.Line({
         points: [xStart - 4, yStart + length - 15, xStart - 4, yStart, xStart + 4, yStart, xStart + 4, yStart + length - 15, xStart + 10, yStart + length - 15,
             xStart, yStart + length, xStart - 10, yStart + length - 15, xStart - 4, yStart + length - 15],
+        fill: color,
+        stroke: color,
+        strokeWidth: 1,
+        closed: true
+    });
+    return arrow;
+}
+
+function canvasCreateLeftArrow(xStart, yStart, length, color) {
+    var arrow = new Kinetic.Line({
+        points: [xStart - length + 15, yStart + 4, xStart, yStart + 4, xStart, yStart - 4, xStart - length + 15, yStart - 4, xStart - length + 15, yStart - 10,
+            xStart - length, yStart, xStart - length + 15, yStart + 10, xStart - length + 15, yStart + 4],
+        fill: color,
+        stroke: color,
+        strokeWidth: 1,
+        closed: true
+    });
+    return arrow;
+}
+
+function canvasCreateRightArrow(xStart, yStart, length, color) {
+    var arrow = new Kinetic.Line({
+        points: [xStart + length - 15, yStart - 4, xStart, yStart - 4, xStart, yStart + 4, xStart + length - 15, yStart + 4, xStart + length - 15, yStart + 10,
+            xStart + length, yStart, xStart + length - 15, yStart - 10, xStart + length - 15, yStart - 4],
         fill: color,
         stroke: color,
         strokeWidth: 1,

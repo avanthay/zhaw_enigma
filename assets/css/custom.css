@@ -24,6 +24,12 @@ body {
 
 #errorMessage {
     height: 70px;
+    position: fixed;
+    width: 70%;
+    z-index: 5;
+    padding-left: 50px;
+    padding-right: 50px;
+    top: 50%;
 }
 
 #inputTextField, #outputTextField {
@@ -58,6 +64,11 @@ body {
     border-radius: 50%; 
 }
 
+#output .button {
+    background-color: #404040;
+    border: none;
+}
+
 #buttonFields {
     clear: both;
 }
@@ -68,10 +79,6 @@ body {
 
 .wheel {
     min-height: 100px;
-    border-style: solid;
-    border-color: grey;
-    border-width: 2px;
-    margin-bottom: 20px;
 }
 
 .wheel ul {
@@ -81,6 +88,7 @@ body {
 .manageWheel {
     width: 250px;
     margin: auto;
+    margin-bottom: 10px;
 }
 
 .manageWheel p {
@@ -106,6 +114,10 @@ body {
     left: 30px;
 }
 
+#reflectorSet .selectWheel {
+    height: 88px;
+}
+
 .selectPosition {
     margin-top: 10px;
 }
@@ -129,6 +141,11 @@ body {
     color: #bbb;
 }
 
+.wheelCanvas {
+    width: 200px;
+    margin: auto;
+}
+
 .selectPosition p {
     font-size: inherit;
 }
@@ -141,5 +158,4 @@ body {
 .plugboardSet {
     width: 780px;
     margin: auto;
-    margin-bottom: 20px;
 }

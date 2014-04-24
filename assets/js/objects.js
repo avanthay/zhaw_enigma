@@ -184,9 +184,9 @@ function Machine(reflector, wheelLeft, wheelCenter, wheelRight, plugboard) {
         forward['wheelRight'] = this.wheelRight.getForwardEncryptedAbsolutePosition(forward['plugboard']);
         forward['wheelCenter'] = this.wheelCenter.getForwardEncryptedAbsolutePosition(forward['wheelRight']);
         forward['wheelLeft'] = this.wheelLeft.getForwardEncryptedAbsolutePosition(forward['wheelCenter']);
-        forward['reflector'] = this.reflector.getEncryptedAbsolutePosition(forward['wheelLeft']);
         var backward = new Array();
-        backward['wheelLeft'] = this.wheelLeft.getBackwardEncryptedAbsolutePosition(forward['reflector']);
+        backward['reflector'] = this.reflector.getEncryptedAbsolutePosition(forward['wheelLeft']);
+        backward['wheelLeft'] = this.wheelLeft.getBackwardEncryptedAbsolutePosition(backward['reflector']);
         backward['wheelCenter'] = this.wheelCenter.getBackwardEncryptedAbsolutePosition(backward['wheelLeft']);
         backward['wheelRight'] = this.wheelRight.getBackwardEncryptedAbsolutePosition(backward['wheelCenter']);
         backward['plugboard'] = this.plugboard.getEncryptedAbsolutePosition(backward['wheelRight']);
