@@ -73,10 +73,11 @@ $(this).keydown(function(e) {
 });
 
 /*
- * resize buttons when window is resized
+ * resize buttons & canvas when window is resized
  */
 $(window).bind("resize", function(e) {
     resizeButtons();
+    canvasResize();
 });
 
 function resizeButtons() {
@@ -121,24 +122,6 @@ $('.selectWheel a').on('click', function(e) {
 });
 
 
-/*
- * catch change wheel position button
- */
-$('.selectPosition a').on('click', function(e) {
-    var action = e.target.parentElement.className.substring(3, 20);
-    var wheel = e.target.parentElement.parentElement.parentElement.parentElement.parentElement.id;
-    wheel = wheel.substring(0, wheel.length - 3);
-    if (action === 'PreviousPosition') {
-        MACHINE[wheel].decrementStartPosition();
-    } else if (action === 'NextPosition') {
-        MACHINE[wheel].incrementStartPosition();
-    }
-    setWheelStartPositions();
-    resetMachine();
-    return false;
-});
-
-
 
 
 /*
@@ -154,7 +137,6 @@ function validCharPressed(char) {
         canvasShowEncryption(char);
         glowLampButton(encryptedChar);
         $('#outputTextField').html($('#outputTextField').html() + encryptedChar);
-        setWheelCurrentPositions();
     }
 }
 
@@ -165,7 +147,6 @@ function backslashPressed() {
     $('#inputTextField').html(text.substring(0, text.length - 1));
     if (text.replace(/\s+/g, '') !== $('#inputTextField').html().replace(/\s+/g, '')) {
         MACHINE.undoRotateWheel();
-        setWheelCurrentPositions();
     }
     var char = text.substring(text.length - 2, text.length - 1);
     if (char.length > 0 && char !== ' ') {
@@ -198,8 +179,8 @@ function createObjects() {
 
 function showError(message) {
     var time = new Date().getTime();
-    var html = '<div class="alert alert-danger alert-dismissable errorMessage'
-            + time + '">'
+    var html = '<div class="alert alert-danger alert-dismissable errorMessage" id="errorMessage'
+            + time + '" style="z-index:5">'
             + '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'
             + '<strong>Error ! </strong> '
             + message + '</div>';
@@ -230,7 +211,6 @@ function resetMachine() {
     MACHINE.resetWheels();
     $('#inputTextField').html('');
     $('#outputTextField').html('');
-    setWheelCurrentPositions();
     canvasReset();
 }
 
@@ -251,23 +231,7 @@ function setSelectedWheels() {
     $('#wheelCenterSet .wheel' + MACHINE.wheelRight.name).addClass('disabled');
     $('#wheelRightSet .wheel' + MACHINE.wheelLeft.name).addClass('disabled');
     $('#wheelRightSet .wheel' + MACHINE.wheelCenter.name).addClass('disabled');
-    setWheelStartPositions();
     $('.selectWheel .reflector' + MACHINE.reflector.name).addClass('active');
-}
-
-function setWheelStartPositions() {
-    var wheels = new Array('wheelLeft', 'wheelCenter', 'wheelRight');
-    wheels.forEach(function(wheel) {
-        $('#' + wheel + 'Set .startPosition a').html(MACHINE[wheel].startPosition);
-        setWheelCurrentPositions();
-    });
-}
-
-function setWheelCurrentPositions() {
-    var wheels = new Array('wheelLeft', 'wheelCenter', 'wheelRight');
-    wheels.forEach(function(wheel) {
-        $('#' + wheel + 'Set .currentPosition a').html(MACHINE[wheel].position);
-    });
 }
 
 /*
@@ -285,17 +249,18 @@ function plugInit() {
     window['plugStage'] = new Kinetic.Stage({
         container: 'plugboardCanvas',
         width: 780,
-        height: 200
+        height: 180
     });
+    plugResize();
     plugAddChars();
 }
 
 function plugAddChars() {
     var layer = new Kinetic.Layer();
     for (var i = 0; i < 26; i++) {
-        layer.add(new plugCreateChar(NUMBERTOCHAR(i + 1), 5 + i * 30, 132, false));
+        layer.add(new plugCreateChar(NUMBERTOCHAR(i + 1), 5 + i * 30, 112, false));
         layer.add(new plugCreateChar(NUMBERTOCHAR(i + 1), 5 + i * 30, 50, true));
-        layer.add(new canvasCreateLine((12 + i * 30), 130, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white', 0.5));
+        layer.add(new canvasCreateLine((12 + i * 30), 110, 12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(i + 1) - 1) * 30, 70, 'white', 0.5));
     }
     plugStage.add(layer);
 }
@@ -308,15 +273,15 @@ function plugReset() {
 function plugShowEncryption(char) {
     var layer = new Kinetic.Layer();
     //input
-    layer.add(new canvasCreateUpArrow(12 + (CHARTONUMBER(char) - 1) * 30, 195, 40, colorFW));
-    layer.add(new canvasCreateLine((12 + (CHARTONUMBER(char) - 1) * 30), 130,
+    layer.add(new canvasCreateUpArrow(12 + (CHARTONUMBER(char) - 1) * 30, 175, 40, colorFW));
+    layer.add(new canvasCreateLine((12 + (CHARTONUMBER(char) - 1) * 30), 110,
             12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 70, colorFW, 1.5));
     layer.add(new canvasCreateUpArrow(12 + (MACHINE.plugboard.getEncryptedAbsolutePosition(CHARTONUMBER(char)) - 1) * 30, 45, 40, colorFW));
     //output
     layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 5, 40, colorBW));
     layer.add(new canvasCreateLine(12 + (MACHINE.getEncryptedPositions(char)['backward']['wheelRight'] - 1) * 30, 70,
-            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 130, colorBW, 1.5));
-    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 155, 40, colorBW));
+            12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 110, colorBW, 1.5));
+    layer.add(new canvasCreateDownArrow(12 + (MACHINE.getEncryptedPositions(char)['backward']['plugboard'] - 1) * 30, 135, 40, colorBW));
 
     plugStage.add(layer);
 }
@@ -346,6 +311,18 @@ function plugCreateChar(char, xPosition, yPosition, draggable) {
         });
     }
     return charObject;
+}
+
+function plugResize() {
+    var size = $('.container').width();
+    if (size > 780) {
+        size = 780;
+    }
+    plugStage.scaleX(size / 780);
+    plugStage.scaleY(size / 780);
+    plugStage.width((size / 780) * 780);
+    plugStage.height((size / 780) * 180);
+    plugStage.draw();
 }
 
 /*
@@ -389,23 +366,36 @@ function wheelInit(wheel) {
         var char = NUMBERTOCHAR(MACHINE[wheel].getRelativePosition((i + 23) % 26));
         var color = 'white';
         if (char === MACHINE[wheel].notch) {
-            layer.add(new canvasCreateLine(55, 11 + i * 15, 65, 11 + i * 15, 'black', 3));
-            layer.add(new canvasCreateLine(135, 11 + i * 15, 145, 11 + i * 15, 'black', 3));
-            color = 'black';
+            color = '#DEB887';
+            layer.add(new canvasCreateLine(55, 11 + i * 15, 65, 11 + i * 15, color, 3));
+            layer.add(new canvasCreateLine(135, 11 + i * 15, 145, 11 + i * 15, color, 3));
         }
         layer.add(new wheelCreateChar(char, 70, 5 + i * 15, color));
         layer.add(new wheelCreateChar(char, 120, 5 + i * 15, color));
         layer.add(new canvasCreateLine(85, 11 + (MACHINE[wheel].getForwardEncryptedAbsolutePosition((i + 23) % 26) + 3) % 26 * 15,
                 115, 11 + i * 15, 'white', 0.5));
     }
-    layer.add(new Kinetic.Rect({
+    var rect = new Kinetic.Rect({
         x: 60,
         y: 63,
         width: 80,
         height: 15,
-        stroke: 'black',
-        strokeWidth: 3
-    }));
+        stroke: 'white',
+        strokeWidth: 3,
+        draggable: true
+    });
+    rect.on('mouseover', function() {
+        document.body.style.cursor = 'pointer';
+    });
+    rect.on('mouseout', function() {
+        document.body.style.cursor = 'default';
+    });
+    rect.on("dragend", function() {
+        var char = NUMBERTOCHAR(MACHINE[wheel].getRelativePosition((parseInt((this.getY() + 4) / 15) + 23) % 26));
+        MACHINE[wheel].changeStartPosition(char);
+        resetMachine();
+    });
+    layer.add(rect);
     window[wheel + 'Stage'].add(layer);
 }
 
@@ -479,7 +469,7 @@ function reflectorAddChars() {
         y: 63,
         width: 30,
         height: 15,
-        stroke: 'black',
+        stroke: 'white',
         strokeWidth: 3
     }));
     reflectorStage.add(layer);
@@ -490,7 +480,6 @@ function reflectorShowEncryption(char) {
     //forward
     var charNr = (MACHINE.getEncryptedPositions(char)['forward']['wheelLeft'] + 3) % 26;
     layer.add(new canvasCreateLeftArrow(160, 11 + charNr * 15, 40, colorFW));
-    console.log(charNr);
     layer.add(new reflectorCreateLine(85, 11 + (MACHINE.getEncryptedPositions(char)['backward']['reflector'] + 3) % 26 * 15,
             85, 11 + charNr * 15, colorBW, 1.5));
     //backward
@@ -535,6 +524,10 @@ function canvasReset() {
     plugReset();
     wheelsReset();
     reflectorReset();
+}
+
+function canvasResize() {
+    plugResize();
 }
 
 /*

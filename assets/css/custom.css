@@ -1,3 +1,17 @@
+@media (min-width: 992px){
+    .wheel {
+        padding-left: 11%;
+        padding-right: 11%;
+    }
+}
+
+@media (min-width: 1200px) {
+    .wheel {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+}
+
 .navbar-brand {
     padding-top: 5px;
 }
@@ -22,14 +36,14 @@ body {
     color: #DEB887;
 }
 
-#errorMessage {
+.errorMessage {
     height: 70px;
     position: fixed;
-    width: 70%;
-    z-index: 5;
+    width: 80%;
     padding-left: 50px;
     padding-right: 50px;
-    top: 50%;
+    top: 40%;
+    z-index: 5;
 }
 
 #inputTextField, #outputTextField {
@@ -75,10 +89,15 @@ body {
 
 .wheels {
     display: table;
+    margin: auto;
 }
 
 .wheel {
-    min-height: 100px;
+    background: url(../img/background_metal.jpg);
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    background-origin: content-box;
+    padding-bottom: 10px;
 }
 
 .wheel ul {
@@ -110,12 +129,29 @@ body {
     margin: 0px;
 }
 
-#reflectorSet ul {
-    left: 30px;
+.pagination .active a,
+.pagination .active a:hover,
+.pagination .disabled a,
+.pagination .disabled a:hover,
+.pagination li a,
+.pagination li a:hover {
+    background-color: inherit;
+    border-color: #ddd;
+    color: #ddd;
 }
 
-#reflectorSet .selectWheel {
-    height: 88px;
+.pagination .disabled a {
+    color: #404040;
+}
+
+.pagination .active a,
+.pagination .active a:hover {
+    color: #DEB887;
+    font-weight: bold;
+}
+
+#reflectorSet ul {
+    left: 30px;
 }
 
 .selectPosition {
@@ -136,11 +172,6 @@ body {
     float: none;
 }
 
-.manageWheel .pagination>.disabled>a {
-    background-color: #eee;
-    color: #bbb;
-}
-
 .wheelCanvas {
     width: 200px;
     margin: auto;
@@ -156,6 +187,6 @@ body {
 }
 
 .plugboardSet {
-    width: 780px;
+    max-width: 780px;
     margin: auto;
 }
