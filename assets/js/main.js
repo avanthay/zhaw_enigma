@@ -12,9 +12,10 @@ var INPUTFOCUSED = false;
  * create machine, wheels & reflectors
  */
 window.onload = function(e) {
-    createObjects();
-    setSelectedWheels();
     createButtons();
+    createObjects();
+    changeConfiguration(createRandomConfiguration());
+    setSelectedWheels();
     canvasInit();
 };
 
@@ -108,10 +109,21 @@ $('#currentConfiguration').focusout(function(e) {
 });
 
 /*
+ * catch set default & random config buttons
+ */
+$('#setDefaultConfiguration').on('click', function (e) {
+    $('#currentConfiguration').val(createDefaultConfiguration());
+});
+$('#setRandomConfiguration').on('click', function (e) {
+    $('#currentConfiguration').val(createRandomConfiguration());
+});
+
+/*
  * catch save settings button
  */
 $('#saveSettings').on('click', function(e) {
-    setConfiguration($('#currentConfiguration').val());
+    changeConfiguration($('#currentConfiguration').val());
+    resetMachine();
     $('#closeSettingsDialog').click();
 });
 
@@ -227,7 +239,8 @@ function getConfiguration() {
     return config;
 }
 
-function setConfiguration(config) {
+function changeConfiguration(config) {
+    config = config.toUpperCase();
     config = config.replace(/,\s+/g, ',').split(',');
     if (!validateConfiguration(config)) {
         return;
@@ -240,7 +253,6 @@ function setConfiguration(config) {
         i++;
     });
     MACHINE.plugboard.setEncryptedChars(config[4]);
-    resetMachine();
 }
 
 function validateConfiguration(config) {
@@ -263,6 +275,42 @@ function validateConfiguration(config) {
         return false;
     }
     return true;
+}
+
+function createRandomConfiguration() {
+    var config = ['B', 'C'][getRandomNr(0, 1)] + ', ';
+    var wheels = new Array();
+    var wheelNr;
+    for (var i = 0; i < 3; i++) {
+        do {
+            wheelNr = getRandomNr(1, 5);
+        } while (wheels.indexOf(wheelNr) !== -1)
+        wheels.push(wheelNr);
+        config += wheelNr + '-' + NUMBERTOCHAR(getRandomNr(1, 26)) + ', ';
+    }
+    var until = getRandomNr(0, 13);
+    var usedChar = new Array();
+    var char1;
+    var char2;
+    for (var i = 0; i < until; i++) {
+        [char1, char2].forEach(function(char) {
+            do {
+                char = NUMBERTOCHAR(getRandomNr(1, 26));
+            } while (usedChar.indexOf(char) !== -1)
+            usedChar.push(char);
+            config += char;
+        });
+        config += ' ';
+    }
+    return config;
+}
+
+function createDefaultConfiguration() {
+    return 'B, 1-A, 2-A, 3-A, ';
+}
+
+function getRandomNr(low, high) {
+    return Math.round(Math.random() * (high - low) + low);
 }
 
 
