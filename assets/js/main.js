@@ -6,6 +6,8 @@ var WHEELS = new Array('0');
 var REFLECTORS = new Array();
 var PLUGBOARD;
 
+var INPUTFOCUSED = false;
+
 /*
  * create machine, wheels & reflectors
  */
@@ -20,15 +22,19 @@ window.onload = function(e) {
  * catch entered text via keybaord
  */
 $(this).keyup(function(e) {
+    if (INPUTFOCUSED) {
+        return;
+    }
     var char = String.fromCharCode(e.which);
     if (e.which >= 65 && e.which <= 90) {
-        //char between A-Z or whitespace pressed
+        //char between A-Z pressed
         $('#inputButton' + char).css('border-style', 'inset');
         $('#inputButton' + char).click();
         setTimeout(function() {
             $('#inputButton' + char).css('border-style', '');
         }, 100);
     } else if (e.which === 32) {
+        //space pressed
         validCharPressed(' ');
     } else if (e.which === 8) {
         //backslash pressed
@@ -61,15 +67,52 @@ $('#aboutLink').on('click', function(e) {
 });
 
 /*
+ * catch settings link
+ */
+$('#settingsLink').on('click', function(e) {
+    $('#currentConfiguration').val(getConfiguration());
+    $('#settingsDialog').modal();
+    return false;
+});
+
+/*
  * prevent navigate back by pressing backslash
  */
 $(this).keydown(function(e) {
     if (e.which === 8 || e.which === 32) {
-        e.preventDefault();
+        if (!INPUTFOCUSED) {
+            e.preventDefault();
+        }
     }
     if (e.which === 27) {
         $('#closeAboutDialog').click();
+        $('#closeSettingsDialog').click();
     }
+    if (e.which === 13) {
+        if (INPUTFOCUSED) {
+            $('#saveSettings').click();
+        } else {
+            $('#closeSettingsDialog').click();
+        }
+    }
+});
+
+/*
+ * change INPUTFOCUS variable
+ */
+$('#currentConfiguration').focusin(function(e) {
+    INPUTFOCUSED = true;
+});
+$('#currentConfiguration').focusout(function(e) {
+    INPUTFOCUSED = false;
+});
+
+/*
+ * catch save settings button
+ */
+$('#saveSettings').on('click', function(e) {
+    setConfiguration($('#currentConfiguration').val());
+    $('#closeSettingsDialog').click();
 });
 
 /*
@@ -116,7 +159,6 @@ $('.selectWheel a').on('click', function(e) {
         WHEELS[number].changeStartPosition('A');
         MACHINE[wheel] = WHEELS[number];
     }
-    setSelectedWheels();
     resetMachine();
     return false;
 });
@@ -176,6 +218,53 @@ function createObjects() {
     MACHINE = new Machine(REFLECTORS['B'], WHEELS[1], WHEELS[2], WHEELS[3], PLUGBOARD);
 }
 
+function getConfiguration() {
+    var config = MACHINE.reflector.name + ', ';
+    ['wheelLeft', 'wheelCenter', 'wheelRight'].forEach(function(wheel) {
+        config += MACHINE[wheel].name + '-' + MACHINE[wheel].startPosition + ', ';
+    });
+    config += MACHINE.plugboard.getEncryptedChars();
+    return config;
+}
+
+function setConfiguration(config) {
+    config = config.replace(/,\s+/g, ',').split(',');
+    if (!validateConfiguration(config)) {
+        return;
+    }
+    MACHINE.reflector = REFLECTORS[config[0]];
+    var i = 1;
+    ['wheelLeft', 'wheelCenter', 'wheelRight'].forEach(function(wheel) {
+        MACHINE[wheel] = WHEELS[config[i][0]];
+        MACHINE[wheel].changeStartPosition(config[i][2]);
+        i++;
+    });
+    MACHINE.plugboard.setEncryptedChars(config[4]);
+    resetMachine();
+}
+
+function validateConfiguration(config) {
+    if (config[0].match(/B|C/) === null) {
+        showError('The entered reflector is not valid');
+        return false;
+    }
+    for (var i = 0; i < 3; i++) {
+        if (config[i + 1][0].match(/[1-5]/) === null || config[i + 1][2].match(/[A-Z]/) === null) {
+            showError('The entered wheel at position nr ' + (i + 1) + ' is not valid');
+            return false;
+        }
+    }
+    if (config[1][0] === config[2][0] || config[1][0] === config[3][0] || config[2][0] === config[3][0]) {
+        showError('Please choose a different wheel for each position');
+        return false;
+    }
+    if (config[4].match(/^\s*([A-Z]{2}\s)*[A-Z]{2}\s*$/) === null && config[4] !== '') {
+        showError('The entered plugboard is not valid');
+        return false;
+    }
+    return true;
+}
+
 
 function showError(message) {
     var time = new Date().getTime();
@@ -211,6 +300,7 @@ function resetMachine() {
     MACHINE.resetWheels();
     $('#inputTextField').html('');
     $('#outputTextField').html('');
+    setSelectedWheels();
     canvasReset();
 }
 
@@ -306,7 +396,7 @@ function plugCreateChar(char, xPosition, yPosition, draggable) {
         });
         charObject.on("dragend", function() {
             var xPos = this.getX() + 10;
-            MACHINE.plugboard.setEncryptedChar(char, NUMBERTOCHAR(parseInt(xPos / 30) + 1));
+            MACHINE.plugboard.addEncryptedChar(char, NUMBERTOCHAR(parseInt(xPos / 30) + 1));
             resetMachine();
         });
     }
@@ -464,14 +554,6 @@ function reflectorAddChars() {
         }
         connectedChars.push(char);
     }
-    layer.add(new Kinetic.Rect({
-        x: 80,
-        y: 63,
-        width: 30,
-        height: 15,
-        stroke: 'white',
-        strokeWidth: 3
-    }));
     reflectorStage.add(layer);
 }
 

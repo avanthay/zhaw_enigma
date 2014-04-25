@@ -32,6 +32,7 @@
                     <ul class="nav navbar-nav">
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
+                        <li><a href="" id="settingsLink">Settings</a></li>
                         <li><a href="" id="aboutLink">About</a></li>
                     </ul>
                 </div><!--/.nav-collapse -->
@@ -141,13 +142,35 @@
 
         </div>
 
+        <!-- the 'settings' dialog -->
+        <div class="modal fade" id='settingsDialog'>
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id='closeSettingsDialog'>&times;</button>
+                        <h4 class="modal-title"><img src="assets/img/logo.png" width="90" alt="Enigma"> Settings</h4>
+                    </div>
+                    <div class="modal-body">
+                            <div class="form-group">
+                                <label>Configuration</label>
+                                <input type="text" class="form-control" id="currentConfiguration">
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveSettings">Save</button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal-dialog -->
+        </div>
+
         <!-- the 'about' info dialog -->
         <div class="modal fade" id='aboutDialog'>
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
                         <button type="button" class="close" data-dismiss="modal" aria-hidden="true" id='closeAboutDialog'>&times;</button>
-                        <h4 class="modal-title">Enigma 1 simulation</h4>
+                        <h4 class="modal-title"><img src="assets/img/logo.png" width="90" alt="Enigma"> Enigma 1 simulation</h4>
                     </div>
                     <div class="modal-body">
                         <p>This JavaScript simulation of Enigma is brought to you by Dave Avanthay & Stephan Zumbühl.

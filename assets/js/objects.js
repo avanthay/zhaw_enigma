@@ -137,9 +137,9 @@ function Reflector(name, encryption) {
  * can be an empty String if no characters have to be encrypted
  */
 function Plugboard(encryption) {
-    this.encryption = CHARS.slice();
+    this.encryption;
 
-    this.setEncryptedChar = function(char1, char2) {
+    this.addEncryptedChar = function(char1, char2) {
         this.encryption[this.encryption.indexOf(char1)] = NUMBERTOCHAR(this.encryption.indexOf(char1));
         this.encryption[this.encryption.indexOf(char2)] = NUMBERTOCHAR(this.encryption.indexOf(char2));
         this.encryption[CHARTONUMBER(char1)] = char2;
@@ -147,15 +147,29 @@ function Plugboard(encryption) {
     };
 
     this.setEncryptedChars = function(chars) {
+        this.encryption = CHARS.slice();
         chars = chars.split(' ');
         for (var i = 0; i < chars.length; i++) {
-            this.setEncryptedChar(chars[i].split('')[0], chars[i].split('')[1]);
+            this.addEncryptedChar(chars[i].split('')[0], chars[i].split('')[1]);
         }
     };
     this.setEncryptedChars(encryption);
 
     this.getEncryptedChar = function(absolutePosition) {
         return this.encryption[absolutePosition];
+    };
+    
+    this.getEncryptedChars = function() {
+        var chars = '';
+        for(var i=0;i<26;i++){
+            var char = CHARS[i+1];
+            var encryptedChar = this.encryption[i+1];
+            if (encryptedChar !== char && chars.indexOf(char) === -1){
+                chars += char + encryptedChar + ' ';
+            }
+        }
+        chars = chars.substring(0,chars.length - 1);
+        return chars;
     };
 
     this.getEncryptedAbsolutePosition = function(absolutePosition) {
